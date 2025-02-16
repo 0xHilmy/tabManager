@@ -1,5 +1,9 @@
 /* Base styles */
 :root {
+  /* Fonts */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  
   /* Primary Colors */
   --primary-color: #2563eb;
   --primary-hover: #1d4ed8;
@@ -7,7 +11,7 @@
   
   /* Surface Colors */
   --surface-color: rgba(255, 255, 255, 0.98);
-  --surface-secondary: rgba(243, 244, 246, 0.8);
+  --surface-secondary: rgba(236, 236, 236, 0.8);
   --surface-hover: rgba(249, 250, 251, 0.95);
   
   /* Text Colors */
@@ -33,7 +37,7 @@
 body {
   width: 320px;
   padding: 16px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg-gradient);
   color: var(--text-primary);
 }
@@ -52,13 +56,16 @@ body {
 }
 
 .header h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
   margin: 0;
   background: var(--bg-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
 }
 
 /* Exclude Keywords Section */
@@ -164,7 +171,7 @@ body {
 
 button {
   width: 100%;
-  padding: 12px;
+  padding: 10px 6px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -288,7 +295,7 @@ button.secondary:hover {
 }
 
 .restore-btn {
-  padding: 6px 12px;
+  padding: 10px 6px;
   font-size: 12px;
   min-width: 80px;
   align-self: flex-end;
@@ -298,6 +305,7 @@ button.secondary:hover {
   width: 100%;
   margin-top: 10px;
   background: #718096;
+  padding: 10px 6px;
 }
 
 .close-modal:hover {
@@ -422,4 +430,46 @@ button.secondary:hover {
 /* Update button styles */
 #closeInactiveTabs {
   padding: 10px 6px;
+}
+
+/* Social Media Section */
+.social-section {
+  margin-top: 16px;
+  text-align: center;
+  padding: 4px;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.social-icon {
+  color: var(--surface-color);
+  opacity: 0.9;
+  transition: all 0.2s;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-icon:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.brand-name {
+  color: var(--surface-color);
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
 } 

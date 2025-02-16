@@ -258,8 +258,85 @@ async function getSummary(url) {
   return "Ringkasan website akan ditambahkan di sini";
 }
 
+// Fungsi untuk kategorisasi tab
+function categorizeTab(url, title) {
+    try {
+        const categories = {
+            'Research': [
+                'sciencedirect.com', 'researchgate.net', 'jstor.org', 'springer.com',
+                'ieee.org', 'pubmed.ncbi.nlm.nih.gov', 'academia.edu', 'scholar.google.com',
+                'arxiv.org', 'nature.com', 'elsevier.com', '.pdf', 'jurnal', 'journal', 'scopus', 'sinta'
+            ],
+            'Social Media': [
+                'facebook.com', 'x.com', 'instagram.com', 'linkedin.com', 
+                'tiktok.com', 'reddit.com', 'pinterest.com', 'tumblr.com'
+            ],
+            'Entertainment': [
+                'youtube.com', 'netflix.com', 'spotify.com', 'twitch.tv',
+                'disney.com', 'vimeo.com', 'soundcloud.com', 'tiktok.com'
+            ],
+            'Technology': [
+                'github.com', 'stackoverflow.com', 'medium.com', 'dev.to',
+                'techcrunch.com', 'wired.com', 'theverge.com', 'gitlab.com'
+            ],
+            'Shopping': [
+                'amazon.com', 'ebay.com', 'shopee.', 'tokopedia.',
+                'bukalapak.', 'lazada.', 'alibaba.com', 'blibli.'
+            ],
+            'Productivity': [
+                'notion.so', 'trello.com', 'asana.com', 'monday.com',
+                'clickup.com', 'docs.google.com', 'sheets.google.com', 'drive.google.com'
+            ]
+        };
+
+        // Khusus untuk file lokal
+        if (url.startsWith('file:///')) {
+            // Cek apakah file PDF
+            if (url.toLowerCase().endsWith('.pdf')) {
+                return 'Research';
+            }
+            return 'Others';
+        }
+
+        // Untuk URL web
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+
+        const domain = new URL(url).hostname.toLowerCase();
+        
+        // Cek kategori berdasarkan domain
+        for (const [category, domains] of Object.entries(categories)) {
+            if (domains.some(d => domain.includes(d))) {
+                return category;
+            }
+        }
+
+        // Cek ekstensi file dan keyword dalam URL
+        const urlLower = url.toLowerCase();
+        if (urlLower.endsWith('.pdf') || 
+            urlLower.includes('/pdf/') || 
+            urlLower.includes('pdf=') || 
+            title.toLowerCase().includes('pdf')) {
+            return 'Research';
+        }
+
+    } catch (error) {
+        console.log('Invalid URL:', url);
+        // Cek file PDF untuk URL yang invalid
+        if (url.toLowerCase().endsWith('.pdf')) {
+            return 'Research';
+        }
+        return 'Others';
+    }
+
+    return 'Others';
+}
+
+// Update fungsi createClosedTabsHTML
 function createClosedTabsHTML(tabData) {
-    const groupedTabs = tabData.reduce((groups, tab) => {
+    // Kelompokkan berdasarkan tanggal
+    const groupedByDate = tabData.reduce((groups, tab) => {
         const date = tab.closeTime.split(',')[0];
         if (!groups[date]) {
             groups[date] = [];
@@ -268,16 +345,29 @@ function createClosedTabsHTML(tabData) {
         return groups;
     }, {});
 
+    // Kelompokkan tab berdasarkan kategori untuk setiap tanggal
+    const groupedByCategory = {};
+    for (const [date, tabs] of Object.entries(groupedByDate)) {
+        groupedByCategory[date] = tabs.reduce((categories, tab) => {
+            const category = categorizeTab(tab.url, tab.title);
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            categories[category].push(tab);
+            return categories;
+        }, {});
+    }
+
     return `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Closed Tabs List</title>
+            <title>Closed Tabs Summary</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
             <style>
                 :root {
-                    --primary-color: #4f46e5;
-                    --bg-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+                    --primary-color: #2563eb    ;
+                    --bg-gradient: linear-gradient(135deg, #2563eb, #7c3aed);
                     --surface-color: rgba(255, 255, 255, 0.95);
                 }
 
@@ -346,7 +436,7 @@ function createClosedTabsHTML(tabData) {
                 }
 
                 .date-stats {
-                    background: var(--bg-gradient);
+                    
                     color: white;
                     padding: 0.4rem 1rem;
                     border-radius: 20px;
@@ -404,32 +494,66 @@ function createClosedTabsHTML(tabData) {
                         font-size: 1.5rem;
                     }
                 }
+
+                .category-section {
+                    margin-bottom: 1.5rem;
+                    background: rgba(255, 255, 255, 0.7);
+                    border-radius: 12px;
+                    padding: 1rem;
+                }
+                
+                .category-header {
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin-bottom: 0.75rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .category-count {
+                    font-size: 0.8rem;
+                    color: #64748b;
+                    background: rgba(255, 255, 255, 0.8);
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 12px;
+                }
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Closed Tabs History</h1>
+                    <h1>Closed Tabs Summary</h1>
                     <div class="stats">
                         Total closed tabs: ${tabData.length}
                     </div>
                 </div>
                 <div class="tab-list">
-                    ${Object.entries(groupedTabs).map(([date, tabs]) => `
+                    ${Object.entries(groupedByCategory).map(([date, categories]) => `
                         <div class="date-group">
                             <div class="date-header">
                                 <span>${date}</span>
-                                <span class="date-stats">${tabs.length} tabs</span>
+                                <span class="date-stats">
+                                    ${Object.values(categories).flat().length} tabs
+                                </span>
                             </div>
-                            <div class="group-tab-list">
-                                ${tabs.map(tab => `
-                                    <a href="${tab.url}" class="tab-item" target="_blank">
-                                        <div class="tab-title">${tab.title}</div>
-                                        <div class="tab-url">${tab.url}</div>
-                                        <div class="tab-time">Closed at: ${tab.closeTime.split(',')[1]}</div>
-                                    </a>
-                                `).join('')}
-                            </div>
+                            ${Object.entries(categories).map(([category, tabs]) => `
+                                <div class="category-section">
+                                    <div class="category-header">
+                                        <span>${category}</span>
+                                        <span class="category-count">${tabs.length} tabs</span>
+                                    </div>
+                                    <div class="group-tab-list">
+                                        ${tabs.map(tab => `
+                                            <a href="${tab.url}" class="tab-item" target="_blank">
+                                                <div class="tab-title">${tab.title}</div>
+                                                <div class="tab-url">${tab.url}</div>
+                                                <div class="tab-time">Closed at: ${tab.closeTime.split(',')[1]}</div>
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     `).join('')}
                 </div>
